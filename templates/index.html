@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>Blood Group Detection</h1>
+        <p class="subtitle">Upload a clear thumbprint image for accurate blood group prediction</p>
+    </header>
+    
+    <main>
+            <form method="POST" enctype="multipart/form-data" id="upload-form">
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-content">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                        </svg>
+                        <p>Drag and drop your thumbprint image or</p>
+                        <label for="file-input" class="file-label">Choose File</label>
+                        <input type="file" id="file-input" name="thumbprint" accept="image/*" required>
+                    </div>
+                    <div id="preview" class="preview-hidden">
+                        <img id="image-preview" src="#" alt="Preview">
+                        <button type="button" class="remove-btn" onclick="removeImage()">✕</button>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <span class="btn-text">Predict Blood Group</span>
+                    <div class="loader"></div>
+                </button>
+            </form>
+        </main>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('file-input');
+        const preview = document.getElementById('preview');
+        const imagePreview = document.getElementById('image-preview');
+        const uploadArea = document.getElementById('upload-area');
+        const uploadForm = document.getElementById('upload-form');
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                preview.classList.remove('preview-hidden');
+                uploadArea.classList.add('has-image');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // File input change handler
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                showPreview(this.files[0]);
+            }
+        });
+
+        // Remove image handler
+        window.removeImage = function() {
+            fileInput.value = '';
+            preview.classList.add('preview-hidden');
+            uploadArea.classList.remove('has-image');
+        };
+
+        // Form submit handler
+        uploadForm.addEventListener('submit', function() {
+            this.classList.add('loading');
+        });
+
+        // Drag and drop handlers
+        function preventDefault(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight() {
+            uploadArea.classList.add('highlight');
+        }
+
+        function unhighlight() {
+            uploadArea.classList.remove('highlight');
+        }
+
+        function handleDrop(e) {
+            preventDefault(e);
+            unhighlight();
+
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files && files[0]) {
+                fileInput.files = files;
+                showPreview(files[0]);
+            }
+        }
+
+        // Add drag and drop event listeners
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefault, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+    });
+</script>
+{% endblock %}
